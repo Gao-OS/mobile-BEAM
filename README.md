@@ -1,6 +1,6 @@
-# Elixir-Desktop Runtimes
+# Erlang/Elixir-OTP Runtimes for Android and iOS
 
-To use elixir-desktop on mobile-phones this projects packages the BEAM Virtual Machine into platform specific binaries. Currently supported are:
+To use `Erlang/Elixir-OTP` on mobile-phones this projects packages the BEAM Virtual Machine into platform specific binaries. Currently supported are:
 
 - Android arm 64-bit
 - Android arm 32-bit
