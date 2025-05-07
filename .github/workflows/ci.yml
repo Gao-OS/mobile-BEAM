@@ -66,7 +66,7 @@ jobs:
       with:
         name: iOS-runtime
         path: _build/liberlang.xcframework
-        
+
     - name: iOS release
       uses: softprops/action-gh-release@v1
       if: startsWith(github.ref, 'refs/tags/')

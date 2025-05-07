@@ -1,0 +1,58 @@
+name: "Release iOS"
+
+on:
+  workflow_dispatch:
+    inputs:
+      otp-version:
+        required: true
+        description: 'The version of erlang OTP'
+        default: '26.2.5.6'
+      elixir-version:
+        required: true
+        description: 'The version of elixir'
+        default: '1.16.3'
+      tag-name:
+        required: true
+        description: 'The git tag of this release'
+        default: '1.0.0'
+
+env:
+  OTP_SOURCE: https://github.com/erlang/otp
+
+permissions:
+  contents: write
+
+jobs:
+  build-for-ios:
+    name: "Build iOS runtime"
+    runs-on: "macos-latest"
+    steps:
+    - run: brew install git carthage coreutils
+    - uses: actions/checkout@v4
+
+    - name: Setup elixir
+      run: |
+        git clone https://github.com/asdf-vm/asdf.git ~/.asdf
+        . $HOME/.asdf/asdf.sh
+        asdf plugin add erlang
+        asdf plugin add elixir
+        echo "erlang ${{ github.event.inputs.otp-version }}" > .tool-versions
+        echo "elixir ${{ github.event.inputs.elixir-version }}" >> .tool-versions
+        asdf install
+
+    - name: Build runtime
+      run:  |
+        . $HOME/.asdf/asdf.sh
+        mix package.ios.runtime
+
+    - name: Archive runtimes
+      uses: actions/upload-artifact@v4
+      with:
+        name: iOS-runtime
+        path: _build/liberlang.xcframework
+
+    - name: iOS release
+      uses: softprops/action-gh-release@v1
+      with:
+        tag_name: ${{ github.event.inputs.tag-name }}
+        files: _build/liberlang.xcframework

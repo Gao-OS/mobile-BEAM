@@ -1,0 +1,58 @@
+name: "Release Android"
+
+on:
+  workflow_dispatch:
+    inputs:
+      otp-version:
+        required: true
+        description: 'The version of erlang OTP'
+        default: '26.2.5.6'
+      elixir-version:
+        required: true
+        description: 'The version of elixir'
+        default: '1.16.3'
+      tag_name:
+        required: true
+        description: 'The git tag of this release'
+        default: '1.0.0'
+
+env:
+  OTP_SOURCE: https://github.com/erlang/otp
+
+permissions:
+  contents: write
+
+jobs:
+  build-for-android:
+    name: "Build Android runtimes"
+    runs-on: "ubuntu-latest"
+    strategy:
+      matrix:
+        arch: ["arm", "arm64", "x86_64"]
+    steps:
+    - name: Setup elixir
+      uses: erlef/setup-beam@v1
+      with:
+        otp-version: ${{ github.event.inputs.otp-version }}
+        elixir-version: ${{ github.event.inputs.elixir-version }}
+
+    - uses: actions/checkout@v4
+
+    - run: |
+        scripts/install_elixir.sh "$HOME/elixir"
+        echo "$HOME/elixir/bin" >> $GITHUB_PATH
+
+    - name: Build Android ${{ matrix.arch }} runtimes
+      run: |
+        mix deps.get
+        ARCH=${{ matrix.arch }} mix package.android.runtime
+    - name: Archive Android runtimes
+      uses: actions/upload-artifact@v4
+      with:
+        name: ${{ matrix.arch }}-runtime
+        path: _build/*.zip
+    - name: Android ${{ matrix.arch }} release
+      uses: softprops/action-gh-release@v1
+      with:
+        tag_name: ${{ github.event.inputs.tag-name }}
+        files: _build/*.zip
