@@ -11,7 +11,7 @@ on:
         required: true
         description: 'The version of elixir'
         default: '1.16.3'
-      tag_name:
+      tag-name:
         required: true
         description: 'The git tag of this release'
         default: '1.0.0'
@@ -24,6 +24,8 @@ permissions:
 
 jobs:
   build-for-android:
+    env:
+      OTP_TAG: OTP-${{ github.event.inputs.otp-version }}
     name: "Build Android runtimes"
     runs-on: "ubuntu-latest"
     strategy:
@@ -37,6 +39,8 @@ jobs:
         elixir-version: ${{ github.event.inputs.elixir-version }}
 
     - uses: actions/checkout@v4
+      with:
+        ref: ${{ github.event.inputs.tag-name }}
 
     - run: |
         scripts/install_elixir.sh "$HOME/elixir"
@@ -46,11 +50,13 @@ jobs:
       run: |
         mix deps.get
         ARCH=${{ matrix.arch }} mix package.android.runtime
+
     - name: Archive Android runtimes
       uses: actions/upload-artifact@v4
       with:
         name: ${{ matrix.arch }}-runtime
         path: _build/*.zip
+
     - name: Android ${{ matrix.arch }} release
       uses: softprops/action-gh-release@v1
       with:

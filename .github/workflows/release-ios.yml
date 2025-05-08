@@ -24,11 +24,16 @@ permissions:
 
 jobs:
   build-for-ios:
+    env:
+      OTP_TAG: OTP-${{ github.event.inputs.otp-version }}
     name: "Build iOS runtime"
     runs-on: "macos-latest"
     steps:
     - run: brew install git carthage coreutils
+
     - uses: actions/checkout@v4
+      with:
+        ref: ${{ github.event.inputs.tag-name }}
 
     - name: Setup elixir
       run: |
@@ -55,4 +60,4 @@ jobs:
       uses: softprops/action-gh-release@v1
       with:
         tag_name: ${{ github.event.inputs.tag-name }}
-        files: _build/liberlang.xcframework
+        files: _build/liberlang.xcframework/**
